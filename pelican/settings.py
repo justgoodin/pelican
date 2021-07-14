@@ -346,10 +346,6 @@ def handle_deprecated_settings(settings):
                 settings['PAGINATED_TEMPLATES'][t] = None
         del settings['PAGINATED_DIRECT_TEMPLATES']
 
-    # {SLUG,CATEGORY,TAG,AUTHOR}_SUBSTITUTIONS ->
-    # {SLUG,CATEGORY,TAG,AUTHOR}_REGEX_SUBSTITUTIONS
-    url_settings_url = \
-        'http://docs.getpelican.com/en/latest/settings.html#url-settings'
     flavours = {'SLUG', 'CATEGORY', 'TAG', 'AUTHOR'}
     old_values = {f: settings[f + '_SUBSTITUTIONS']
                   for f in flavours if f + '_SUBSTITUTIONS' in settings}
@@ -362,6 +358,10 @@ def handle_deprecated_settings(settings):
             .format(old_key='SLUG_SUBSTITUTIONS',
                     new_key='SLUG_REGEX_SUBSTITUTIONS'))
     if old_values:
+        # {SLUG,CATEGORY,TAG,AUTHOR}_SUBSTITUTIONS ->
+        # {SLUG,CATEGORY,TAG,AUTHOR}_REGEX_SUBSTITUTIONS
+        url_settings_url = \
+            'http://docs.getpelican.com/en/latest/settings.html#url-settings'
         message = ('{} and variants thereof are deprecated and will be '
                    'removed in the future. Please use {} and variants thereof '
                    'instead. Check {}.'
@@ -598,10 +598,9 @@ def configure_settings(settings):
         'TRANSLATION_FEED_ATOM', 'TRANSLATION_FEED_RSS',
     ]
 
-    if any(settings.get(k) for k in feed_keys):
-        if not settings.get('SITEURL'):
-            logger.warning('Feeds generated without SITEURL set properly may'
-                           ' not be valid')
+    if any(settings.get(k) for k in feed_keys) and not settings.get('SITEURL'):
+        logger.warning('Feeds generated without SITEURL set properly may'
+                       ' not be valid')
 
     if 'TIMEZONE' not in settings:
         logger.warning(

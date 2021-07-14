@@ -217,9 +217,10 @@ class TestSettingsConfiguration(unittest.TestCase):
         self.assertRaises(Exception, handle_deprecated_settings, settings)
 
     def test_slug_and_slug_regex_substitutions_exception(self):
-        settings = {}
-        settings['SLUG_REGEX_SUBSTITUTIONS'] = [('C++', 'cpp')]
-        settings['TAG_SUBSTITUTIONS'] = [('C#', 'csharp')]
+        settings = {
+            'SLUG_REGEX_SUBSTITUTIONS': [('C++', 'cpp')],
+            'TAG_SUBSTITUTIONS': [('C#', 'csharp')],
+        }
 
         self.assertRaises(Exception, handle_deprecated_settings, settings)
 
@@ -236,8 +237,7 @@ class TestSettingsConfiguration(unittest.TestCase):
 
         # If SLUG_SUBSTITUTIONS is set, set {SLUG, AUTHOR}_REGEX_SUBSTITUTIONS
         # correctly, don't set {CATEGORY, TAG}_REGEX_SUBSTITUTIONS
-        settings = {}
-        settings['SLUG_SUBSTITUTIONS'] = [('C++', 'cpp')]
+        settings = {'SLUG_SUBSTITUTIONS': [('C++', 'cpp')]}
         settings = handle_deprecated_settings(settings)
         self.assertEqual(settings.get('SLUG_REGEX_SUBSTITUTIONS'),
                          [(r'C\+\+', 'cpp')] + default_slug_regex_subs)
@@ -249,10 +249,12 @@ class TestSettingsConfiguration(unittest.TestCase):
         # If {CATEGORY, TAG, AUTHOR}_SUBSTITUTIONS are set, set
         # {CATEGORY, TAG, AUTHOR}_REGEX_SUBSTITUTIONS correctly, don't set
         # SLUG_REGEX_SUBSTITUTIONS
-        settings = {}
-        settings['TAG_SUBSTITUTIONS'] = [('C#', 'csharp')]
-        settings['CATEGORY_SUBSTITUTIONS'] = [('C#', 'csharp')]
-        settings['AUTHOR_SUBSTITUTIONS'] = [('Alexander Todorov', 'atodorov')]
+        settings = {
+            'TAG_SUBSTITUTIONS': [('C#', 'csharp')],
+            'CATEGORY_SUBSTITUTIONS': [('C#', 'csharp')],
+            'AUTHOR_SUBSTITUTIONS': [('Alexander Todorov', 'atodorov')],
+        }
+
         settings = handle_deprecated_settings(settings)
         self.assertNotIn('SLUG_REGEX_SUBSTITUTIONS', settings)
         self.assertEqual(settings['TAG_REGEX_SUBSTITUTIONS'],
@@ -265,11 +267,13 @@ class TestSettingsConfiguration(unittest.TestCase):
 
         # If {SLUG, CATEGORY, TAG, AUTHOR}_SUBSTITUTIONS are set, set
         # {SLUG, CATEGORY, TAG, AUTHOR}_REGEX_SUBSTITUTIONS correctly
-        settings = {}
-        settings['SLUG_SUBSTITUTIONS'] = [('C++', 'cpp')]
-        settings['TAG_SUBSTITUTIONS'] = [('C#', 'csharp')]
-        settings['CATEGORY_SUBSTITUTIONS'] = [('C#', 'csharp')]
-        settings['AUTHOR_SUBSTITUTIONS'] = [('Alexander Todorov', 'atodorov')]
+        settings = {
+            'SLUG_SUBSTITUTIONS': [('C++', 'cpp')],
+            'TAG_SUBSTITUTIONS': [('C#', 'csharp')],
+            'CATEGORY_SUBSTITUTIONS': [('C#', 'csharp')],
+            'AUTHOR_SUBSTITUTIONS': [('Alexander Todorov', 'atodorov')],
+        }
+
         settings = handle_deprecated_settings(settings)
         self.assertEqual(settings['TAG_REGEX_SUBSTITUTIONS'],
                          [(r'C\+\+', 'cpp')] + [(r'C\#', 'csharp')] +
@@ -282,10 +286,11 @@ class TestSettingsConfiguration(unittest.TestCase):
                          default_slug_regex_subs)
 
         # Handle old 'skip' flags correctly
-        settings = {}
-        settings['SLUG_SUBSTITUTIONS'] = [('C++', 'cpp', True)]
-        settings['AUTHOR_SUBSTITUTIONS'] = [('Alexander Todorov', 'atodorov',
-                                             False)]
+        settings = {
+            'SLUG_SUBSTITUTIONS': [('C++', 'cpp', True)],
+            'AUTHOR_SUBSTITUTIONS': [('Alexander Todorov', 'atodorov', False)],
+        }
+
         settings = handle_deprecated_settings(settings)
         self.assertEqual(settings.get('SLUG_REGEX_SUBSTITUTIONS'),
                          [(r'C\+\+', 'cpp')] +

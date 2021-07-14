@@ -49,7 +49,7 @@ class Content:
         self._context = context
         self.translations = []
 
-        local_metadata = dict()
+        local_metadata = {}
         local_metadata.update(metadata)
 
         # set metadata as attributes
@@ -178,14 +178,16 @@ class Content:
         return True
 
     def _has_valid_status(self):
-        if hasattr(self, 'allowed_statuses'):
-            if self.status not in self.allowed_statuses:
-                logger.error(
-                    "Unknown status '%s' for file %s, skipping it. (Not in %s)",
-                    self.status,
-                    self, self.allowed_statuses
-                )
-                return False
+        if (
+            hasattr(self, 'allowed_statuses')
+            and self.status not in self.allowed_statuses
+        ):
+            logger.error(
+                "Unknown status '%s' for file %s, skipping it. (Not in %s)",
+                self.status,
+                self, self.allowed_statuses
+            )
+            return False
 
         # if undefined we allow all
         return True

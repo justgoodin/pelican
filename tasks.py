@@ -15,10 +15,8 @@ VENV = str(VENV_PATH.expanduser())
 VENV_BIN = Path(VENV) / Path(BIN_DIR)
 
 TOOLS = ["poetry", "pre-commit", "psutil"]
-POETRY = which("poetry") if which("poetry") else (VENV_BIN / "poetry")
-PRECOMMIT = (
-    which("pre-commit") if which("pre-commit") else (VENV_BIN / "pre-commit")
-)
+POETRY = which("poetry") or VENV_BIN / "poetry"
+PRECOMMIT = which("pre-commit") or VENV_BIN / "pre-commit"
 
 
 @task
@@ -42,7 +40,7 @@ def docserve(c):
 @task
 def tests(c):
     """Run the test suite"""
-    PTY = True if os.name != "nt" else False
+    PTY = os.name != "nt"
     c.run(f"{VENV_BIN}/pytest", pty=PTY)
 
 

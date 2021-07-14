@@ -106,11 +106,8 @@ class TestWordpressXmlImporter(unittest.TestCase):
         """ Check that we recognise pages in wordpress, as opposed to posts """
         self.assertTrue(self.posts)
         # Collect (title, filename, kind) of non-empty posts recognised as page
-        pages_data = []
-        for (title, content, fname, date, author,
-                categ, tags, status, kind, format) in self.posts:
-            if kind == 'page':
-                pages_data.append((title, fname))
+        pages_data = [(title, fname) for (title, content, fname, date, author,
+                categ, tags, status, kind, format) in self.posts if kind == 'page']
         self.assertEqual(2, len(pages_data))
         self.assertEqual(('Page', 'contact'), pages_data[0])
         self.assertEqual(('Empty Page', 'empty'), pages_data[1])
@@ -125,45 +122,59 @@ class TestWordpressXmlImporter(unittest.TestCase):
 
     def test_dircat(self):
         silent_f2p = mute(True)(fields2pelican)
-        test_posts = []
-        for post in self.posts:
-            # check post kind
-            if len(post[5]) > 0:  # Has a category
-                test_posts.append(post)
+        test_posts = [post for post in self.posts if len(post[5]) > 0]
         with temporary_folder() as temp:
             fnames = list(silent_f2p(test_posts, 'markdown',
                                      temp, dircat=True))
         subs = DEFAULT_CONFIG['SLUG_REGEX_SUBSTITUTIONS']
-        index = 0
-        for post in test_posts:
+        for index, post in enumerate(test_posts):
             name = post[2]
             category = slugify(post[5][0], regex_subs=subs, preserve_case=True)
             name += '.md'
             filename = os.path.join(category, name)
             out_name = fnames[index]
             self.assertTrue(out_name.endswith(filename))
-            index += 1
 
     def test_unless_custom_post_all_items_should_be_pages_or_posts(self):
         self.assertTrue(self.posts)
-        pages_data = []
-        for (title, content, fname, date, author, categ,
-                tags, status, kind, format) in self.posts:
-            if kind == 'page' or kind == 'article':
-                pass
-            else:
-                pages_data.append((title, fname))
+        pages_data = [
+            (title, fname)
+            for (
+                title,
+                content,
+                fname,
+                date,
+                author,
+                categ,
+                tags,
+                status,
+                kind,
+                format,
+            ) in self.posts
+            if kind not in ['page', 'article']
+        ]
+
         self.assertEqual(0, len(pages_data))
 
     def test_recognise_custom_post_type(self):
         self.assertTrue(self.custposts)
-        cust_data = []
-        for (title, content, fname, date, author, categ,
-                tags, status, kind, format) in self.custposts:
-            if kind == 'article' or kind == 'page':
-                pass
-            else:
-                cust_data.append((title, kind))
+        cust_data = [
+            (title, kind)
+            for (
+                title,
+                content,
+                fname,
+                date,
+                author,
+                categ,
+                tags,
+                status,
+                kind,
+                format,
+            ) in self.custposts
+            if kind not in ['article', 'page']
+        ]
+
         self.assertEqual(3, len(cust_data))
         self.assertEqual(
             ('A custom post in category 4', 'custom1'),
@@ -177,41 +188,32 @@ class TestWordpressXmlImporter(unittest.TestCase):
 
     def test_custom_posts_put_in_own_dir(self):
         silent_f2p = mute(True)(fields2pelican)
-        test_posts = []
-        for post in self.custposts:
-            # check post kind
-            if post[8] == 'article' or post[8] == 'page':
-                pass
-            else:
-                test_posts.append(post)
+        test_posts = [
+            post for post in self.custposts if post[8] not in ['article', 'page']
+        ]
+
         with temporary_folder() as temp:
             fnames = list(silent_f2p(test_posts, 'markdown',
                                      temp, wp_custpost=True))
-        index = 0
-        for post in test_posts:
+        for index, post in enumerate(test_posts):
             name = post[2]
             kind = post[8]
             name += '.md'
             filename = os.path.join(kind, name)
             out_name = fnames[index]
             self.assertTrue(out_name.endswith(filename))
-            index += 1
 
     def test_custom_posts_put_in_own_dir_and_catagory_sub_dir(self):
         silent_f2p = mute(True)(fields2pelican)
-        test_posts = []
-        for post in self.custposts:
-            # check post kind
-            if post[8] == 'article' or post[8] == 'page':
-                pass
-            else:
-                test_posts.append(post)
+        test_posts = [
+            post for post in self.custposts if post[8] not in ['article', 'page']
+        ]
+
         with temporary_folder() as temp:
             fnames = list(silent_f2p(test_posts, 'markdown', temp,
                                      wp_custpost=True, dircat=True))
         subs = DEFAULT_CONFIG['SLUG_REGEX_SUBSTITUTIONS']
-        index = 0
-        for post in test_posts:
+        for index, post in enumerate(test_posts):
             name = post[2]
             kind = post[8]
             category = slugify(post[5][0], regex_subs=subs, preserve_case=True)
@@ -219,16 +221,11 @@ class TestWordpressXmlImporter(unittest.TestCase):
             filename = os.path.join(kind, category, name)
             out_name = fnames[index]
             self.assertTrue(out_name.endswith(filename))
-            index += 1
 
     def test_wp_custpost_true_dirpage_false(self):
         # pages should only be put in their own directory when dirpage = True
         silent_f2p = mute(True)(fields2pelican)
-        test_posts = []
-        for post in self.custposts:
-            # check post kind
-            if post[8] == 'page':
-                test_posts.append(post)
+        test_posts = [post for post in self.custposts if post[8] == 'page']
         with temporary_folder() as temp:
             fnames = list(silent_f2p(test_posts, 'markdown', temp,
                                      wp_custpost=True, dirpage=False))

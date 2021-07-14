@@ -58,10 +58,7 @@ class ANSIFormatter(BaseFormatter):
 
     def _get_levelname(self, name):
         color = self.ANSI_CODES[self.LEVEL_COLORS.get(name, 'white')]
-        if name == 'INFO':
-            fmt = '{0}->{2}'
-        else:
-            fmt = '{0}{1}{2}:'
+        fmt = '{0}->{2}' if name == 'INFO' else '{0}{1}{2}:'
         return fmt.format(color, name, self.ANSI_CODES['reset'])
 
 
@@ -182,9 +179,7 @@ def supports_color():
 
     # isatty is not always implemented, #6223.
     is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
-    if not supported_platform or not is_a_tty:
-        return False
-    return True
+    return bool(supported_platform and is_a_tty)
 
 
 def get_formatter():

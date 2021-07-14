@@ -58,8 +58,8 @@ class TestBase(LoggedTestCase):
     def _copy_page_kwargs(self):
         # make a deep copy of page_kwargs
         page_kwargs = {key: self.page_kwargs[key] for key in self.page_kwargs}
-        for key in page_kwargs:
-            if not isinstance(page_kwargs[key], dict):
+        for key, value in page_kwargs.items():
+            if not isinstance(value, dict):
                 break
             page_kwargs[key] = {
                 subkey: page_kwargs[key][subkey] for subkey in page_kwargs[key]
@@ -252,10 +252,7 @@ class TestPage(TestBase):
         page_kwargs['settings'] = get_settings()
 
         # I doubt this can work on all platforms ...
-        if platform == "win32":
-            locale = 'jpn'
-        else:
-            locale = 'ja_JP.utf8'
+        locale = 'jpn' if platform == "win32" else 'ja_JP.utf8'
         page_kwargs['settings']['DATE_FORMATS'] = {'jp': (locale,
                                                           '%Y-%m-%d(%a)')}
         page_kwargs['metadata']['lang'] = 'jp'
@@ -286,7 +283,6 @@ class TestPage(TestBase):
     def test_signal(self):
         def receiver_test_function(sender):
             receiver_test_function.has_been_called = True
-            pass
         receiver_test_function.has_been_called = False
 
         content_object_init.connect(receiver_test_function)

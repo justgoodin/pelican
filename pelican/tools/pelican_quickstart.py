@@ -98,11 +98,10 @@ def ask(question, answer=str, default=None, length=None):
                     break
                 else:
                     print('You must enter something')
+            elif length and len(r) != length:
+                print('Entry must be {} characters long'.format(length))
             else:
-                if length and len(r) != length:
-                    print('Entry must be {} characters long'.format(length))
-                else:
-                    break
+                break
 
         return r
 
@@ -308,11 +307,8 @@ needed by Pelican.
 
     try:
         with open(os.path.join(CONF['basedir'], 'pelicanconf.py'),
-                  'w', encoding='utf-8') as fd:
-            conf_python = dict()
-            for key, value in CONF.items():
-                conf_python[key] = repr(value)
-
+                          'w', encoding='utf-8') as fd:
+            conf_python = {key: repr(value) for key, value in CONF.items()}
             _template = _jinja_env.get_template('pelicanconf.py.jinja2')
             fd.write(_template.render(**conf_python))
             fd.close()

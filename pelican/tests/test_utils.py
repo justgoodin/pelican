@@ -470,9 +470,8 @@ class TestUtils(LoggedTestCase):
         retention = ()
         test_directory = os.path.join(os.path.dirname(__file__),
                                       'this_is_a_file')
-        f = open(test_directory, 'w')
-        f.write('')
-        f.close()
+        with open(test_directory, 'w') as f:
+            f.write('')
         utils.clean_output_dir(test_directory, retention)
         self.assertFalse(os.path.exists(test_directory))
 
@@ -737,10 +736,7 @@ class TestDateFormatter(unittest.TestCase):
                          locale_available('French'),
                          'French locale needed')
     def test_french_locale(self):
-        if platform == 'win32':
-            locale_string = 'French'
-        else:
-            locale_string = 'fr_FR.UTF-8'
+        locale_string = 'French' if platform == 'win32' else 'fr_FR.UTF-8'
         settings = read_settings(
             override={
                 'LOCALE': locale_string,
@@ -772,10 +768,7 @@ class TestDateFormatter(unittest.TestCase):
                          locale_available('Turkish'),
                          'Turkish locale needed')
     def test_turkish_locale(self):
-        if platform == 'win32':
-            locale_string = 'Turkish'
-        else:
-            locale_string = 'tr_TR.UTF-8'
+        locale_string = 'Turkish' if platform == 'win32' else 'tr_TR.UTF-8'
         settings = read_settings(
             override={
                 'LOCALE': locale_string,

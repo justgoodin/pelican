@@ -343,7 +343,7 @@ class RstReaderTest(ReaderTest):
         # Make sure vars aren't getting "inherited" by mistake...
         path = "article.rst"
         page = self.read_file(path=path, EXTRA_PATH_METADATA=epm)
-        for k in expected_metadata.keys():
+        for k in expected_metadata:
             self.assertNotIn(k, page.metadata)
 
         # Same, but for edge cases where one file's name is a prefix of

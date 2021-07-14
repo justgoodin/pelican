@@ -64,14 +64,14 @@ class TestPelican(LoggedTestCase):
         ).communicate()
 
         def ignorable_git_crlf_errors(line):
-            # Work around for running tests on Windows
-            for msg in [
+            return any(
+                msg in line
+                for msg in [
                     "LF will be replaced by CRLF",
                     "CRLF will be replaced by LF",
-                    "The file will have its original line endings"]:
-                if msg in line:
-                    return True
-            return False
+                    "The file will have its original line endings",
+                ]
+            )
         if err:
             err = '\n'.join([line for line in err.decode('utf8').splitlines()
                              if not ignorable_git_crlf_errors(line)])
@@ -128,11 +128,7 @@ class TestPelican(LoggedTestCase):
                          locale_available('French'), 'French locale needed')
     def test_custom_locale_generation_works(self):
         '''Test that generation with fr_FR.UTF-8 locale works'''
-        if sys.platform == 'win32':
-            our_locale = 'French'
-        else:
-            our_locale = 'fr_FR.UTF-8'
-
+        our_locale = 'French' if sys.platform == 'win32' else 'fr_FR.UTF-8'
         settings = read_settings(path=SAMPLE_FR_CONFIG, override={
             'PATH': INPUT_PATH,
             'OUTPUT_PATH': self.temp_path,

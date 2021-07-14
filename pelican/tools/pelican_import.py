@@ -120,8 +120,7 @@ def xml_to_soup(xml):
         sys.exit(error)
     with open(xml, encoding='utf-8') as infile:
         xmlfile = infile.read()
-    soup = BeautifulSoup(xmlfile, "xml")
-    return soup
+    return BeautifulSoup(xmlfile, "xml")
 
 
 def get_filename(post_name, post_id):
@@ -175,15 +174,7 @@ def wp2fields(xml, wp_custpost=False):
             if post_type == 'page':
                 kind = 'page'
             elif wp_custpost:
-                if post_type == 'post':
-                    pass
-                # Old behaviour was to name everything not a page as an
-                # article.Theoretically all attachments have status == inherit
-                # so no attachments should be here. But this statement is to
-                # maintain existing behaviour in case that doesn't hold true.
-                elif post_type == 'attachment':
-                    pass
-                else:
+                if post_type not in ['post', 'attachment']:
                     kind = post_type
             yield (title, content, filename, date, author, categories,
                    tags, status, kind, 'wp-html')
@@ -287,6 +278,10 @@ def dc2fields(file):
 
     settings = read_settings()
     subs = settings['SLUG_REGEX_SUBSTITUTIONS']
+    author = ''
+    kind = 'article'  # TODO: Recognise pages
+    status = 'published'  # TODO: Find a way for draft posts
+
     for post in posts:
         fields = post.split('","')
 
@@ -323,7 +318,6 @@ def dc2fields(file):
         # remove seconds
         post_creadt = ':'.join(post_creadt.split(':')[0:2])
 
-        author = ''
         categories = []
         tags = []
 
@@ -348,9 +342,8 @@ def dc2fields(file):
                     .decode('utf-8')
                 )
             else:
-                i = 1
                 j = 1
-                while(i <= int(tag[:1])):
+                for _ in range(1, int(tag[:1]) + 1):
                     newtag = tag.split('"')[j].replace('\\', '')
                     tags.append(
                         BeautifulSoup(
@@ -360,9 +353,8 @@ def dc2fields(file):
                         # bs4 always outputs UTF-8
                         .decode('utf-8')
                     )
-                    i = i + 1
                     if j < int(tag[:1]) * 2:
-                        j = j + 2
+                        j += 2
 
         """
         dotclear2 does not use markdown by default unless
@@ -375,9 +367,6 @@ def dc2fields(file):
             content = post_excerpt_xhtml + post_content_xhtml
             content = content.replace('\\n', '')
             post_format = "html"
-
-        kind = 'article'  # TODO: Recognise pages
-        status = 'published'  # TODO: Find a way for draft posts
 
         yield (post_title, content, slugify(post_title, regex_subs=subs),
                post_creadt, author, categories, tags, status, kind,
@@ -399,8 +388,7 @@ def posterous2fields(api_token, email, password):
         request = urllib_request.Request(url)
         request.add_header('Authorization', 'Basic %s' % base64string.decode())
         handle = urllib_request.urlopen(request)
-        posts = json.loads(handle.read().decode('utf-8'))
-        return posts
+        return json.loads(handle.read().decode('utf-8'))
 
     page = 1
     posts = get_posterous_posts(api_token, email, password, page)
@@ -618,12 +606,11 @@ def build_markdown_header(title, date, author, categories, tags,
 
 def get_ext(out_markup, in_markup='html'):
     if out_markup == 'asciidoc':
-        ext = '.adoc'
+        return '.adoc'
     elif in_markup == 'markdown' or out_markup == 'markdown':
-        ext = '.md'
+        return '.md'
     else:
-        ext = '.rst'
-    return ext
+        return '.rst'
 
 
 def get_out_filename(output_path, filename, ext, kind,
@@ -1000,20 +987,16 @@ def main():
         fields = blogger2fields(args.input)
     elif input_type == 'dotclear':
         fields = dc2fields(args.input)
+    elif input_type == 'feed':
+        fields = feed2fields(args.input)
+
     elif input_type == 'posterous':
         fields = posterous2fields(args.input, args.email, args.password)
     elif input_type == 'tumblr':
         fields = tumblr2fields(args.input, args.blogname)
     elif input_type == 'wordpress':
         fields = wp2fields(args.input, args.wp_custpost or False)
-    elif input_type == 'feed':
-        fields = feed2fields(args.input)
-
-    if args.wp_attach:
-        attachments = get_attachments(args.input)
-    else:
-        attachments = None
-
+    attachments = get_attachments(args.input) if args.wp_attach else None
     # init logging
     init()
     fields2pelican(fields, args.markup, args.output,

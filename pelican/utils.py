@@ -144,10 +144,9 @@ class memoized:
             return self.func(*args)
         if args in self.cache:
             return self.cache[args]
-        else:
-            value = self.func(*args)
-            self.cache[args] = value
-            return value
+        value = self.func(*args)
+        self.cache[args] = value
+        return value
 
     def __repr__(self):
         return self.func.__doc__
@@ -387,9 +386,8 @@ def get_relative_path(path):
     components = split_all(path)
     if len(components) <= 1:
         return os.curdir
-    else:
-        parents = [os.pardir] * (len(components) - 1)
-        return os.path.join(*parents)
+    parents = [os.pardir] * (len(components) - 1)
+    return os.path.join(*parents)
 
 
 def path_to_url(path):
@@ -439,7 +437,7 @@ class _HTMLWordTruncator(HTMLParser):
     def getoffset(self):
         line_start = 0
         lineno, line_offset = self.getpos()
-        for i in range(lineno - 1):
+        for _ in range(lineno - 1):
             line_start = self.rawdata.index('\n', line_start) + 1
         return line_start + line_offset
 
@@ -525,11 +523,10 @@ class _HTMLWordTruncator(HTMLParser):
         if self.last_word_end is None:
             if self._word_prefix_regex.match(char):
                 self.last_word_end = ref_end
+        elif self._word_regex.match(char):
+            self.last_word_end = ref_end
         else:
-            if self._word_regex.match(char):
-                self.last_word_end = ref_end
-            else:
-                self.add_last_word()
+            self.add_last_word()
 
     def handle_entityref(self, name):
         """
@@ -552,10 +549,7 @@ class _HTMLWordTruncator(HTMLParser):
         `#x2014`)
         """
         try:
-            if name.startswith('x'):
-                codepoint = int(name[1:], 16)
-            else:
-                codepoint = int(name)
+            codepoint = int(name[1:], 16) if name.startswith('x') else int(name)
             char = chr(codepoint)
         except (ValueError, OverflowError):
             char = ''
@@ -778,9 +772,8 @@ class FileSystemWatcher:
                              new_ignore_files)
 
         # Watch STATIC_PATHS
-        old_static_watchers = set(key
-                                  for key in self.watchers
-                                  if key.startswith('[static]'))
+        old_static_watchers = {key for key in self.watchers
+                                      if key.startswith('[static]')}
 
         for path in settings.get('STATIC_PATHS', []):
             key = '[static]{}'.format(path)

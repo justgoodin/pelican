@@ -99,11 +99,11 @@ class Generator:
                 except TemplateNotFound:
                     continue
 
-            if name not in self._templates:
-                raise PelicanTemplateNotFound(
-                    '[templates] unable to load {}[{}] from {}'.format(
-                        name, ', '.join(self.settings['TEMPLATE_EXTENSIONS']),
-                        self._templates_path))
+        if name not in self._templates:
+            raise PelicanTemplateNotFound(
+                '[templates] unable to load {}[{}] from {}'.format(
+                    name, ', '.join(self.settings['TEMPLATE_EXTENSIONS']),
+                    self._templates_path))
 
         return self._templates[name]
 
@@ -124,10 +124,7 @@ class Generator:
             return False
 
         ext = os.path.splitext(basename)[1][1:]
-        if extensions is False or ext in extensions:
-            return True
-
-        return False
+        return extensions is False or ext in extensions
 
     def get_files(self, paths, exclude=[], extensions=None):
         """Return a list of files to use, based on rules
@@ -159,11 +156,16 @@ class Generator:
                     excl = exclusions_by_dirpath.get(dirpath, ())
                     # We copy the `dirs` list as we will modify it in the loop:
                     for d in list(dirs):
-                        if (d in excl or
-                            any(fnmatch.fnmatch(d, ignore)
-                                for ignore in ignores)):
-                            if d in dirs:
-                                dirs.remove(d)
+                        if (
+                            (
+                                d in excl
+                                or any(
+                                    fnmatch.fnmatch(d, ignore)
+                                    for ignore in ignores
+                                )
+                            )
+                        ) and d in dirs:
+                            dirs.remove(d)
 
                     reldir = os.path.relpath(dirpath, self.path)
                     for f in temp_files:
@@ -823,9 +825,10 @@ class StaticGenerator(Generator):
         for f in linked_files | found_files:
 
             # skip content source files unless the user explicitly wants them
-            if self.settings['STATIC_EXCLUDE_SOURCES']:
-                if self._is_potential_source_path(f):
-                    continue
+            if self.settings[
+                'STATIC_EXCLUDE_SOURCES'
+            ] and self._is_potential_source_path(f):
+                continue
 
             static = self.readers.read_file(
                 base_path=self.path, path=f, content_class=Static,
@@ -918,15 +921,15 @@ class StaticGenerator(Generator):
             else:
                 os.link(source_path, save_as)
         except OSError as err:
-            if err.errno == errno.EXDEV:  # 18: Invalid cross-device link
-                logger.debug(
-                    "Cross-device links not valid. "
-                    "Creating symbolic links instead."
-                    )
-                self.fallback_to_symlinks = True
-                self._link_staticfile(sc)
-            else:
+            if err.errno != errno.EXDEV:
                 raise err
+
+            logger.debug(
+                "Cross-device links not valid. "
+                "Creating symbolic links instead."
+                )
+            self.fallback_to_symlinks = True
+            self._link_staticfile(sc)
 
     def _mkdir(self, path):
         if os.path.lexists(path) and not os.path.isdir(path):

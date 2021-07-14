@@ -76,11 +76,7 @@ def ensure_metadata_list(text):
        empty items are discarded.
     """
     if isinstance(text, str):
-        if ';' in text:
-            text = text.split(';')
-        else:
-            text = text.split(',')
-
+        text = text.split(';') if ';' in text else text.split(',')
     return list(OrderedDict.fromkeys(
         [v for v in (w.strip() for w in text) if v]
     ))
@@ -478,9 +474,11 @@ class HTMLReader(BaseReader):
             parser.feed(content)
             parser.close()
 
-        metadata = {}
-        for k in parser.metadata:
-            metadata[k] = self.process_metadata(k, parser.metadata[k])
+        metadata = {
+            k: self.process_metadata(k, parser.metadata[k])
+            for k in parser.metadata
+        }
+
         return parser.body, metadata
 
 
@@ -727,10 +725,14 @@ def parse_path_metadata(source_path, settings=None, process=None):
     base, ext = os.path.splitext(basename)
     subdir = os.path.basename(dirname)
     if settings:
-        checks = []
-        for key, data in [('FILENAME_METADATA', base),
-                          ('PATH_METADATA', source_path)]:
-            checks.append((settings.get(key, None), data))
+        checks = [
+            (settings.get(key, None), data)
+            for key, data in [
+                ('FILENAME_METADATA', base),
+                ('PATH_METADATA', source_path),
+            ]
+        ]
+
         if settings.get('USE_FOLDER_AS_CATEGORY', None):
             checks.append(('(?P<category>.*)', subdir))
         for regexp, data in checks:
